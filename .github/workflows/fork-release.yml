@@ -164,6 +164,19 @@ jobs:
           merge-multiple: true
           pattern: apk-*
 
+      - name: Locate the APKs
+        id: apks
+        run: |
+          set -euo pipefail
+          # upload-artifact keeps the path relative to the search root, so the files
+          # land as artifacts/<flavour>/release/app-<flavour>-release.apk.
+          find artifacts -name '*.apk' -type f | tee apks.txt
+          count=$(wc -l < apks.txt)
+          if [ "$count" -ne 2 ]; then
+            echo "::error::expected 2 APKs, found $count"
+            exit 1
+          fi
+
       - name: Work out release tag
         id: tag
         run: |
@@ -207,6 +220,6 @@ jobs:
               (3 s → 15 s → 60 s) instead of retrying a dead host every <=4 s
             - download settings: optional Adaptive tier (opt-in; default unchanged)
           files: |
-            artifacts/app-modern-release.apk
-            artifacts/app-legacy-release.apk
+            artifacts/**/app-modern-release.apk
+            artifacts/**/app-legacy-release.apk
           fail_on_unmatched_files: true
